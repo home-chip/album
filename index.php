@@ -1,18 +1,33 @@
-<?php
 
-?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+
+<html>
 
 <head>
 	<title>Site Web</title>
-	<meta http-equiv="content-type" content="text/html;charset=utf-8" />
-	<meta name="generator" content="Geany 1.32" />
 </head>
 
 <body>
-	
+
+Voici la liste des photos trouvées sur le nas :
+
+<?php
+
+
+	if ($handle = opendir('/media')) {
+
+    	while (false !== ($entry = readdir($handle))) {
+
+	        if ($entry != "." && $entry != "..") {
+
+	            echo "$entry\n";
+	        }
+	    }
+
+	    closedir($handle);
+}
+
+?>
+
 </body>
 
 </html>
