@@ -4,17 +4,21 @@
 
 <?php
 
-function list_files($dir)
+function list_files($dir,$nb)
 {
     if ($handle = opendir($dir)) {
- 		echo "Directory : $dir\n";
 		while (false !== ($entry = readdir($handle))) {
 
 	        if ($entry != "." && $entry != "..") {
-	        	 if (list_files($dir."/".$entry)) {
+	        	 if (list_files($dir."/".$entry,$nb)) {
 	        	 }
 	        	 else {
-		 		     echo "	file : $entry\n";
+				if ($nb >= 10) {
+					echo "</tr><tr>";
+					$nb = 0;
+				}
+		 	 	echo "<td><img src=".$dir."/".$entry." style=\"height:150px;\"></td>";
+			 	$nb++;	
 	        	 }
 	        }
 	    }
@@ -36,12 +40,14 @@ function list_files($dir)
 
 Voici la liste des photos trouvées sur le nas :
 
-<?php
-
-	list_files("/media");	
-}
-
+	<table>
+	<tr>
+<?php	
+	list_files("./nas");	
 ?>
+	</tr>
+	</table>
+
 
 </body>
 
