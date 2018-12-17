@@ -94,7 +94,7 @@ function insert_file_to_db($filename) {
 }
 
 function save_files_to_db_by_Id($sBinaryThumbnail,$nId) {
-
+	echo "test";
 	$oDatabase = mysqli_connect("localhost", "album_user", "USER.Album1","album"); 
 	$sQuery = "UPDATE items SET icon = '$sBinaryThumbnail' WHERE id = '$nId'";
 	mysqli_query($sQuery, $oDatabase);
@@ -126,26 +126,44 @@ function list_files()
 {
 	
 	$mysql = mysqli_connect("localhost", "album_user", "USER.Album1","album") or die("Could not Connect.");
-    $sQuery = "select * from items order by create_date";
+    
+    $sQuery = "select * from items";
 
+	if ($_GET['sort'] == "date") {
+	    $sQuery .= " order by create_date";
+    }
+    
 	if ($sql = mysqli_query($mysql,$sQuery)) {
 		    
 	    if($sql){
-	    	echo '<table>';
-	        echo '<tr>';
+	    	echo '<table><tr>';
+	    	$row_img = '';
+	        $row_date = '';
 	        $nb = 0;
 	        while($row = mysqli_fetch_array($sql)){
 	        	if ($nb > 10) {
+	        		echo $row_img;
 	        		echo '</tr>';
-	        		echo '<tr>';	
+	        		echo '<tr>';
+	        		echo $row_date;
+	        		echo '</tr>';
+	        		echo '<tr>';
+	        		$row_img = '';
+	        		$row_date = '';
 	        		$nb = 0;
 	        	}
 	        	$nb++;
-	        	echo '<td>';
+
 	        	$uri = "data:image/jpeg;base64," . base64_encode($row['icon']);
-				echo "<a href=\"thumbnail.php?id=".$row['ID']."\"><img src=\"".$uri."\" alt=\"".$row['path']."\" ></a>";
-     			echo '</td>';	
-	        		
+	        	$row_img .= '<td><a href=\"thumbnail.php?id='.$row['ID'].'"><img src="'.$uri.'" alt="'.$row['path'].'"></a></td>';	
+	        	$row_date .= '<td>'.$row['create_date'].'</td>';	
+			    
+	        }
+	        if ($nb > 0) {
+		        echo $row_img;
+		        echo '</tr>';
+		        echo '<tr>';
+		        echo $row_date;
 	        }
 	        echo '</tr>';
 	    	echo '</table>';
@@ -165,16 +183,29 @@ function list_files()
 
 <body>
 
-Voici la liste des photos trouvées sur le nas :
+<table>
+	<tr>
+		<td>
+			<form action="./index.php?update=true">
+			    <input type="submit" value="Update" />
+			</form>
+		</td>
+		<td>
+			<form action="./index.php?sort=date">
+		   		<input type="submit" value="Order by date" />
+			</form>
+		</td>
+	</tr>
+</table>
 
-<pre>
 <?php	
-	insert_files_to_db("./nas");	
+	
+	if ($_GET['update']) {
+		insert_files_to_db("./nas");		
+	}
 	list_files();	
-
-
+		
 ?>
-</pre>
 
 </body>
 
