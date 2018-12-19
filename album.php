@@ -1,5 +1,15 @@
 <?php
 
+// Initialize the session
+session_start();
+ 
+// Check if the user is logged in, if not then redirect him to login page
+if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
+    header("location: login.php");
+    exit;
+}
+
+// Functions album
 function create_thumbnail($sTempFileName) {
 		
 		$oTempFile = fopen($sTempFileName, "r"); 
@@ -55,7 +65,7 @@ function file_exists_in_db($path) {
 	return false;
 }
 
-function insert_to_db($name, $path, $icon, $create_date, $description) {
+function insert_to_db($name, $path, $icon, $create_date, $description, $file_date) {
 	
    	$mysqli = new mysqli("localhost", "album_user", "USER.Album1","album");
     if ($mysqli -> connect_errno)
@@ -64,7 +74,7 @@ function insert_to_db($name, $path, $icon, $create_date, $description) {
        	exit();
     }
     if (is_null($create_date )) {
-    	$sql_statement  = "insert into items(name, path, icon, description) values ('$name', '$path', '$icon', '$description')"; 
+    	$sql_statement  = "insert into items(name, path, icon, create_date, description) values ('$name', '$path', '$icon', from_unixtime($file_date) , '$description')"; 
     }
     else {
     	$sql_statement  = "insert into items(name, path, icon, create_date, description) values ('$name', '$path', '$icon', '$create_date', '$description')"; 	
@@ -82,13 +92,13 @@ function insert_file_to_db($filename) {
 
 	if (file_exists($filename)) {
 		$exif = exif_read_data($filename, 0, true);
-		//print_r ($exif);
 		$create_date 	= $exif['EXIF']['DateTimeOriginal'];
 		$name 			= $exif['FILE']['FileName'];
+		$file_date		= $exif['FILE']['FileDateTime'];
 		$description	= "";
 		$icon 			= create_thumbnail($filename);
 		if ($icon != "") {
-			insert_to_db($name, $filename, $icon, $create_date, $description);			
+			insert_to_db($name, $filename, $icon, $create_date, $description, $file_date);			
 		}
 	}
 }
@@ -155,7 +165,7 @@ function list_files()
 	        	$nb++;
 
 	        	$uri = "data:image/jpeg;base64," . base64_encode($row['icon']);
-	        	$row_img .= '<td><a href=\"thumbnail.php?id='.$row['ID'].'"><img src="'.$uri.'" alt="'.$row['path'].'"></a></td>';	
+	        	$row_img .= '<td><a href="thumbnail.php?id='.$row['ID'].'"><img src="'.$uri.'" alt="'.$row['path'].'"></a></td>';	
 	        	$row_date .= '<td>'.$row['create_date'].'</td>';	
 			    
 	        }
@@ -173,40 +183,50 @@ function list_files()
 
 ?>
 
-
+<!DOCTYPE html>
 <html>
-<meta charset="UTF-8"> 
-
+	<meta charset="UTF-8"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <style type="text/css">
+        body{ font: 14px sans-serif; text-align: center; }
+    </style>
 <head>
 	<title>Site Web</title>
 </head>
 
 <body>
+	<div class="page-header">
+        <h1>Album</h1>
+   	</div>
+    
+	<div class="page-menu">
+		<a href="welcome.php" class="btn btn-default">Welcome</a>
+		<a href="album.php" class="btn btn-default">Album</a>
+	</div>
+	<table>
+		<tr>
+			<td>
+				<input type="button" onclick="location.href='./album.php?update=true';" value="Update" />
+			</td>
+			<td>
+				<input type="button" onclick="location.href='./album.php?sort=date';" value="Order by date" />
+			</td>
+		</tr>
+	</table>
 
-<table>
-	<tr>
-		<td>
-			<form action="./index.php?update=true">
-			    <input type="submit" value="Update" />
-			</form>
-		</td>
-		<td>
-			<form action="./index.php?sort=date">
-		   		<input type="submit" value="Order by date" />
-			</form>
-		</td>
-	</tr>
-</table>
-
-<?php	
-	
-	if ($_GET['update']) {
-		insert_files_to_db("./nas");		
-	}
-	list_files();	
+	<?php	
 		
-?>
+		if ($_GET['update']=="true") {
+			insert_files_to_db("./nas");		
+		}
+		list_files();	
+			
+	?>
 
+	<p>
+	        <a href="reset-password.php" class="btn btn-warning">Reset Your Password</a>
+	        <a href="logout.php" class="btn btn-danger">Sign Out of Your Account</a>
+	</p>
 </body>
 
 </html>
