@@ -35,78 +35,102 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 	
 	// Include config file
 	require_once "config.php";
-	 
-	// Check if username is empty
-    if(empty(trim($_POST["username"]))){
-        $username_err = "Please enter username.";
-    } else{
-        $username = trim($_POST["username"]);
-   	}
-    
-	// Validate email
-    if(empty(trim($_POST["email"]))){
-        $email_err = "Please enter an email.";     
-    } elseif(!filter_var($_POST["email"], FILTER_VALIDATE_EMAIL)){
-        $email_err = "Please enter a valid email.";     
-    }
-    else {
-        $email = trim($_POST["email"]);
-    }
-
-	for ($i = 1; $i <= 31; $i++) {
-		if (isset($_POST["right".$i]) && ($_POST["right".$i] == 1)) {
-			$rights = $rights + pow(2,($i-1));			
-		}
-	}
-	if (isset($_POST["right32"]) && ($_POST["right32"] == 1)) {
-		$rights = $rights - pow(2,31);;			
-	}
-
-    if(empty($username_err) && empty($email_err)){
-		
-	    $sql = "SELECT id FROM users WHERE username = ? and id != ".$_POST["id"];
-	        
+	
+	if ($_POST["action"] == "Delete") {
+		// Prepare a select statement
+	    $sql = "DELETE FROM users WHERE id = ".$_POST["id"];
+				        
 	    if($stmt = mysqli_prepare($link, $sql)){
-	    	// Bind variables to the prepared statement as parameters
-	        mysqli_stmt_bind_param($stmt, "s", $username);
-	        
-	        // Attempt to execute the prepared statement
-	        if(mysqli_stmt_execute($stmt)){
-	        	/* store result */
-	            mysqli_stmt_store_result($stmt);
-	                
-	            if(mysqli_stmt_num_rows($stmt) == 1){
-	            	$username_err = "This username is already taken.";
-	            }
-	         	else {
+	                   
+			if(mysqli_stmt_execute($stmt)){
+		    	/* store result */
+		        mysqli_stmt_store_result($stmt);
+		        $status = "Deleted.";
+	        } else{
+		        $status = "Oops! Something went wrong. Please try again later.";
+		    }
+		  	// Close statement
+		    mysqli_stmt_close($stmt);
 
-				    // Close statement
-			        mysqli_stmt_close($stmt);
+		    // Close connection
+		    mysqli_close($link);
+ 		}
 
-		   			// Prepare a select statement
-			        $sql = "UPDATE users set username = ? , email = ? , rights = ? WHERE id = ".$_POST["id"];
-			        
-			        if($stmt = mysqli_prepare($link, $sql)){
-			            // Bind variables to the prepared statement as parameters
-			            mysqli_stmt_bind_param($stmt, "ssi", $username, $email, $rights);
-			           
-			 			if(mysqli_stmt_execute($stmt)){
-			                /* store result */
-			                mysqli_stmt_store_result($stmt);
-			                $status = "Saved.";
-		
-			            } else{
-			                $status = "Oops! Something went wrong. Please try again later.";
-			            }
-			        	// Close statement
-		    		    mysqli_stmt_close($stmt);
+	} 
+	elseif ($_POST["action"] == "Delete") {
 
-					    // Close connection
-					    mysqli_close($link);
-			 		}
-			 	}
+		// Check if username is empty
+	    if(empty(trim($_POST["username"]))){
+	        $username_err = "Please enter username.";
+	    } else{
+	        $username = trim($_POST["username"]);
+	   	}
+	    
+		// Validate email
+	    if(empty(trim($_POST["email"]))){
+	        $email_err = "Please enter an email.";     
+	    } elseif(!filter_var($_POST["email"], FILTER_VALIDATE_EMAIL)){
+	        $email_err = "Please enter a valid email.";     
+	    }
+	    else {
+	        $email = trim($_POST["email"]);
+	    }
+
+		for ($i = 1; $i <= 31; $i++) {
+			if (isset($_POST["right".$i]) && ($_POST["right".$i] == 1)) {
+				$rights = $rights + pow(2,($i-1));			
 			}
-	   }
+		}
+		if (isset($_POST["right32"]) && ($_POST["right32"] == 1)) {
+			$rights = $rights - pow(2,31);;			
+		}
+
+	    if(empty($username_err) && empty($email_err)){
+			
+		    $sql = "SELECT id FROM users WHERE username = ? and id != ".$_POST["id"];
+		        
+		    if($stmt = mysqli_prepare($link, $sql)){
+		    	// Bind variables to the prepared statement as parameters
+		        mysqli_stmt_bind_param($stmt, "s", $username);
+		        
+		        // Attempt to execute the prepared statement
+		        if(mysqli_stmt_execute($stmt)){
+		        	/* store result */
+		            mysqli_stmt_store_result($stmt);
+		                
+		            if(mysqli_stmt_num_rows($stmt) == 1){
+		            	$username_err = "This username (".$username.") is already taken.";
+		            }
+		         	else {
+
+					    // Close statement
+				        mysqli_stmt_close($stmt);
+
+			   			// Prepare a select statement
+				        $sql = "UPDATE users set username = ? , email = ? , rights = ? WHERE id = ".$_POST["id"];
+				        
+				        if($stmt = mysqli_prepare($link, $sql)){
+				            // Bind variables to the prepared statement as parameters
+				            mysqli_stmt_bind_param($stmt, "ssi", $username, $email, $rights);
+				           
+				 			if(mysqli_stmt_execute($stmt)){
+				                /* store result */
+				                mysqli_stmt_store_result($stmt);
+				                $status = "Saved.";
+			
+				            } else{
+				                $status = "Oops! Something went wrong. Please try again later.";
+				            }
+				        	// Close statement
+			    		    mysqli_stmt_close($stmt);
+
+						    // Close connection
+						    mysqli_close($link);
+				 		}
+				 	}
+				}
+		   }
+		}
 	}
 } 
 
@@ -126,13 +150,12 @@ function list_users()
 	    	echo '<table>';
 	    	echo '<tr>';
 	    	
-	        echo '<td rowspan=2>Update</td>';	
-	        echo '<td rowspan=2>username</td>';	
-	        echo '<td rowspan=2>email</td>';	
+	        echo '<td rowspan=2>Id</td>';	
+	        echo '<td rowspan=2>Username</td>';	
+	        echo '<td rowspan=2>Email</td>';	
 	        
-	        echo '<td colspan=32>rights</td>';	
-	    	echo '<td rowspan=2>Delete</td>';	
-	        echo '</tr>';
+	        echo '<td colspan=32>Rights</td>';	
+	    	echo '</tr>';
 	    	echo '<tr>';
 	    	for ($i = 1; $i <= 32; $i++) {
 				echo '<td>'.$i.'</td>';	
@@ -146,7 +169,8 @@ function list_users()
 			    	echo '<form action="'.htmlspecialchars($_SERVER["PHP_SELF"]).'" method="post">';
 	        		#echo '<td>'.$row['id'].'</td>';	
 	        		echo '<td>';
-			        echo '<input type="submit" name="id" value="'.$row['id'].'" >';
+			        echo '<input type="hidden" name="id" value="'.$row['id'].'" >';
+			        echo $row['id'];
 			        echo '</td>';
 	        		echo '<td><INPUT type="text" name="username" value="'.$row['username'].'" ></td>';
 					echo '<td><INPUT type="text" name="email" value="'.$row['email'].'" ></td>';
@@ -160,8 +184,12 @@ function list_users()
 						}
 					}
 					echo '<td>';
-			        	echo '<input type="submit" name="delete" value="'.$row['id'].'" >';
+			        	echo '<input type="submit" name="action" value="Delete" >';
 			        echo '</td>';
+	        		echo '<td>';
+			        	echo '<input type="submit" name="action" value="Update" >';
+			        echo '</td>';
+			    	echo '</form>';
 	        		
 		        echo '</tr>';
 		    	echo '<tr>';
