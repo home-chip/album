@@ -35,6 +35,7 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     <div class="page-menu">
         <a href="welcome.php" class="btn btn-default">welcome</a>
         <a href="album.php" class="btn btn-default">Album</a>
+        <a href="users_management.php" class="btn btn-default">Users</a>
     </div>
     <p>
         <a href="reset-password.php" class="btn btn-warning">Reset Your Password</a>

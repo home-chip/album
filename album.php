@@ -17,6 +17,20 @@ if(!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true){
     exit;
 }
 
+
+// Check rights
+function nbit($number, $n) { return ($number >> $n-1) & 1;}
+$view_pictures			= 0;
+$view_details			= 0;
+$control				= 0;
+
+if(isset($_SESSION["rights"])) {
+
+	$view_pictures 	= nbit($_SESSION["rights"],2);
+	$view_details 	= nbit($_SESSION["rights"],3);
+	$control 		= nbit($_SESSION["rights"],4);
+}
+
 // Functions album
 function create_thumbnail($sTempFileName) {
 		
@@ -147,8 +161,10 @@ function list_files()
     
     $sQuery = "select * from items";
 
-	if ($_GET['sort'] == "date") {
-	    $sQuery .= " order by create_date";
+	if (isset($_GET['sort'])) {
+		if ($_GET['sort'] == "date") {
+	    	$sQuery .= " order by create_date";
+	    }
     }
     
 	if ($sql = mysqli_query($mysql,$sQuery)) {
@@ -172,10 +188,18 @@ function list_files()
 	        	}
 	        	$nb++;
 
-	        	$uri = "data:image/jpeg;base64," . base64_encode($row['icon']);
-	        	$row_img .= '<td><a href="thumbnail.php?id='.$row['ID'].'"><img src="'.$uri.'" alt="'.$row['path'].'"></a></td>';	
-	        	$row_date .= '<td>'.$row['create_date'].'</td>';	
+	        	if ($view_details == 1) {
+					$uri = "data:image/jpeg;base64," . base64_encode($row['icon']);
+	        		$row_img .= '<td><a href="thumbnail.php?id='.$row['ID'].'"><img src="'.$uri.'" alt="'.$row['path'].'"></a></td>';	
+	        		$row_date .= '<td>'.$row['create_date'].'</td>';	
+			    }
+			    else {
+					$uri = "data:image/jpeg;base64," . base64_encode($row['icon']);
+	        		$row_img .= '<td><img src="'.$uri.'" alt="'.$row['path'].'"></td>';	
+	        		$row_date .= '<td>'.$row['create_date'].'</td>';	
 			    
+			    }
+	        	
 	        }
 	        if ($nb > 0) {
 		        echo $row_img;
@@ -210,11 +234,12 @@ function list_files()
 	<div class="page-menu">
 		<a href="welcome.php" class="btn btn-default">Welcome</a>
 		<a href="album.php" class="btn btn-default">Album</a>
+		<a href="users_management.php" class="btn btn-default">Users</a>
 	</div>
 	<table>
 		<tr>
 			<td>
-				<input type="button" onclick="location.href='./album.php?update=true';" value="Update" />
+				<input type="button" onclick="location.href='./album.php?update';" value="Update" />
 			</td>
 			<td>
 				<input type="button" onclick="location.href='./album.php?sort=date';" value="Order by date" />
@@ -224,10 +249,21 @@ function list_files()
 
 	<?php	
 		
-		if ($_GET['update']=="true") {
-			insert_files_to_db("./nas");		
+		if ($control == 1) {
+			if (isset($_GET['update'])) {
+				insert_files_to_db("./nas");		
+			}
 		}
-		list_files();	
+		else {
+			echo "You don't have the right to update.";		
+		}
+
+		if ($view_pictures == 1) {
+			list_files();	
+		}
+		else {
+			echo "You don't have the right to view.";
+		}
 			
 	?>
 
