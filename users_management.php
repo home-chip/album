@@ -57,7 +57,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
  		}
 
 	} 
-	elseif ($_POST["action"] == "Delete") {
+	elseif ($_POST["action"] == "Update") {
 
 		// Check if username is empty
 	    if(empty(trim($_POST["username"]))){
